@@ -1,5 +1,9 @@
 ⚠ This Package is Still in Development! (Find any bugs? Join Our Discord Server, link is at the bottom of this page!)
 
+# Note
+
+Just changed the messages
+
 # Discord.js Akinator
 
 Create an Akinator Command for Your Discord Bot within Seconds of Installation.
