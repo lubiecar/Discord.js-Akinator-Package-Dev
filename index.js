@@ -68,7 +68,7 @@ module.exports = async function (message, client, region) {
             .setColor("RANDOM")
 
         await startingMessage.delete();
-        let akiMessage = await message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**e**), hayır (**h**), bilmiyorum (**i**), muhtemelen (**m**), muhtemelen değil (**md**), geri dön (**g**), bitir (**b**)` })
+        //let akiMessage = await message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**e**), hayır (**h**), bilmiyorum (**i**), muhtemelen (**m**), muhtemelen değil (**md**), geri dön (**g**), bitir (**b**)` })
          
         // if message was deleted, quit the player from the game
         /*client.on("messageDelete", async deletedMessage => {
@@ -148,7 +148,7 @@ module.exports = async function (message, client, region) {
 
             if (!notFinished) return;
 
-            message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**y**), hayır (**n**), bilmiyorum (**i**), muhtemelen (**p**), muhtemelen değil (**pn**), geri dön (**g**), bitir (**b**)` })
+            message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**e**), hayır (**h**), bilmiyorum (**i**), muhtemelen (**m**), muhtemelen değil (**md**), geri dön (**g**), bitir (**b**)` })
 
             // all valid answers when answering a regular akinator question
             const filter = x => {
