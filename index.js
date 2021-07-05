@@ -68,10 +68,10 @@ module.exports = async function (message, client, region) {
             .setColor("RANDOM")
 
         await startingMessage.delete();
-        let akiMessage = await message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**y**), hayır (**n**), bilmiyorum (**i**), muhtemelen (**p**), muhtemelen değil (**pn**), geri dön (**g**), bitir (**b**)` })
+        let akiMessage = await message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**e**), hayır (**h**), bilmiyorum (**i**), muhtemelen (**m**), muhtemelen değil (**md**), geri dön (**g**), bitir (**b**)` })
          
         // if message was deleted, quit the player from the game
-        client.on("messageDelete", async deletedMessage => {
+        /*client.on("messageDelete", async deletedMessage => {
             if (deletedMessage.id == akiMessage.id) {
                 notFinished = false;
                 games.delete(message.author.id)
@@ -79,7 +79,7 @@ module.exports = async function (message, client, region) {
                 await aki.win()
                 return;
             }
-        })
+        })*/
 
         // repeat while the game is not finished
         while (notFinished) {
@@ -99,7 +99,7 @@ module.exports = async function (message, client, region) {
                     .setDescription(`Bu tahmini yaparken **%${Math.round(aki.progress)}** eminim.\n\nEğer doğru tahmin ise **e**, yanlış tahmin ise **y** yazın.`)
                     .setImage(aki.answers[0].absolute_picture_path)
                     .setColor("GOLD")
-                await akiMessage.edit({ embed: guessEmbed });
+                await message.channel.send({ embed: guessEmbed });
 
                 // valid answers if the akinator sends the last question
                 const guessFilter = x => {
@@ -118,7 +118,7 @@ module.exports = async function (message, client, region) {
                 })
                     .then(async responses => {
                         if (!responses.size) {
-                            return akiMessage.edit({ embed: noResEmbed });
+                            return message.channel.send({ content: ":octagonal_sign: 1 dakika içinde herhangi bir cevap vermediğiniz için oyun iptal edildi." });
                         }
                         const guessAnswer = String(responses.first()).toLowerCase();
 
@@ -136,7 +136,7 @@ module.exports = async function (message, client, region) {
                         // otherwise
                         } else if (guessAnswer == "y" || guessAnswer == "yanlış") {
                             if (aki.currentStep >= 78) {
-                                await akiMessage.edit({ content: `:clap: Tebrikler ${message.author}, beni yendin.` })
+                                await message.channel.send({ content: `:clap: Tebrikler ${message.author}, beni yendin.` })
                                 notFinished = false;
                                 games.delete(message.author.id)
                             } else {
@@ -179,7 +179,7 @@ module.exports = async function (message, client, region) {
                         await aki.win()
                         notFinished = false;
                         games.delete(message.author.id)
-                        return message.channel.send({ content: ":octogonal_sign: **1 dakika** içinde herhangi bir cevap vermediğiniz için oyun iptal edildi." })
+                        return message.channel.send({ content: ":octagonal_sign: **1 dakika** içinde herhangi bir cevap vermediğiniz için oyun iptal edildi." })
                     }
                     const answer = String(responses.first()).toLowerCase().replace("'", "");
 
@@ -198,8 +198,6 @@ module.exports = async function (message, client, region) {
                         "muhtemelen değil": 4,
                     }
 
-                    await responses.first().delete();
-
                     if (answer == "g" || answer == "geri") {
                         if (aki.currentStep >= 1) {
                             await aki.back();
@@ -209,7 +207,7 @@ module.exports = async function (message, client, region) {
                     } else if (answer == "b" || answer == "bitir") {
                         games.delete(message.author.id)
                         await aki.win()
-                        await message.channel.send({ content: ":octogonal_sign: Oyun başarıyla iptal edildi." })
+                        await message.channel.send({ content: ":octagonal_sign: Oyun başarıyla iptal edildi." })
                         notFinished = false;
                     } else {
                         await aki.step(answers[answer]);
