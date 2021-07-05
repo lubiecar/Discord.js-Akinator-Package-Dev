@@ -38,26 +38,12 @@ module.exports = async function (message, client, region) {
         let avatar = message.author.displayAvatarURL()
         
         // check if a game is being hosted by the player
-        if (games.has(message.author.id)) {
-            let alreadyPlayingEmbed = new Discord.MessageEmbed()
-                .setAuthor(usertag, avatar)
-                .setTitle(`❌ You're Already Playing!`)
-                .setDescription("**You're already Playing a Game of Akinator. Type `S` or `Stop` to Cancel your Game.**")
-                .setColor("RED")
-
-            return message.channel.send({ embed: alreadyPlayingEmbed })
-        }
+        if (games.has(message.author.id))  return;
        
         // adding the player into the game
         games.add(message.author.id)
 
-        let startingEmbed = new Discord.MessageEmbed()
-            .setAuthor(usertag, avatar)
-            .setTitle(`Starting Game...`)
-            .setDescription("**The Game will Start in About 3 Seconds...**")
-            .setColor("RANDOM")
-
-        let startingMessage = await message.channel.send({ embed: startingEmbed })
+        let startingMessage = await message.channel.send({ content: ":alarm_clock: Oyun başlıyor, hazır ol!" })
 
         // starts the game
         let aki = new Aki(region)
@@ -82,7 +68,7 @@ module.exports = async function (message, client, region) {
             .setColor("RANDOM")
 
         await startingMessage.delete();
-        let akiMessage = await message.channel.send({ embed: akiEmbed });
+        let akiMessage = await message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**y**), hayır (**n**), bilmiyorum (**i**), muhtemelen (**p**), muhtemelen değil (**pn**), geri dön (**g**), bitir (**b**)` })
          
         // if message was deleted, quit the player from the game
         client.on("messageDelete", async deletedMessage => {
@@ -109,22 +95,21 @@ module.exports = async function (message, client, region) {
                 hasGuessed = true;
 
                 let guessEmbed = new Discord.MessageEmbed()
-                    .setAuthor(usertag, avatar)
-                    .setTitle(`I'm ${Math.round(aki.progress)}% Sure your Character is...`)
-                    .setDescription(`**${aki.answers[0].name}**\n${aki.answers[0].description}\n\nIs this your Character? **(Type Y/Yes or N/No)**`)
-                    .addField("Ranking", `**#${aki.answers[0].ranking}**`, true)
-                    .addField("No. of Questions", `**${aki.currentStep}**`, true)
+                    .setAuthor(`${aki.answers[0].name} (${aki.answers[0].description})`, avatar)
+                    .setDescription(`Bu tahmini yaparken **%${Math.round(aki.progress)}** eminim.\n\nEğer doğru tahmin ise **e**, yanlış tahmin ise **y** yazın.`)
                     .setImage(aki.answers[0].absolute_picture_path)
-                    .setColor("RANDOM")
+                    .setColor("GOLD")
                 await akiMessage.edit({ embed: guessEmbed });
 
                 // valid answers if the akinator sends the last question
                 const guessFilter = x => {
                     return (x.author.id === message.author.id && ([
+                        "e",
+                        "evet",
+                        "doğru",
+                        "d",
                         "y",
-                        "yes",
-                        "n",
-                        "no"
+                        "yanlış"
                     ].includes(x.content.toLowerCase())));
                 }
 
@@ -142,29 +127,16 @@ module.exports = async function (message, client, region) {
                         attemptingGuess.delete(message.guild.id)
 
                         // if they answered yes
-                        if (guessAnswer == "y" || guessAnswer == "yes") {
-                            let finishedGameCorrect = new Discord.MessageEmbed()
-                                .setAuthor(usertag, avatar)
-                                .setTitle(`Well Played!`)
-                                .setDescription(`**${message.author.username}, I guessed right one more time!**`)
-                                .addField("Character", `**${aki.answers[0].name}**`, true)
-                                .addField("Ranking", `**#${aki.answers[0].ranking}**`, true)
-                                .addField("No. of Questions", `**${aki.currentStep}**`, true)
-                                .setColor("RANDOM")
-                            await akiMessage.edit({ embed: finishedGameCorrect })
+                        if (guessAnswer == "d" || guessAnswer == "doğru" || guessAnswer == "e" || guessAnswer == "evet") {
+                            await message.channel.send({ content: `:confetti_ball: Harika, seçtiğin **${aki.answers[0].name}** karakterini **${aki.currentStep}** soruda bildim.\nSeçtiğin karakter **${aki.answers[0].ranking}.** sırada, senle oynamak güzeldi!` })
                             notFinished = false;
                             games.delete(message.author.id)
                             return;
                            
                         // otherwise
-                        } else if (guessAnswer == "n" || guessAnswer == "no") {
+                        } else if (guessAnswer == "y" || guessAnswer == "yanlış") {
                             if (aki.currentStep >= 78) {
-                                let finishedGameDefeated = new Discord.MessageEmbed()
-                                    .setAuthor(usertag, avatar)
-                                    .setTitle(`Well Played!`)
-                                    .setDescription(`**${message.author.username}, bravo! You have defeated me...**`)
-                                    .setColor("RANDOM")
-                                await akiMessage.edit({ embed: finishedGameDefeated })
+                                await akiMessage.edit({ content: `:clap: Tebrikler ${message.author}, beni yendin.` })
                                 notFinished = false;
                                 games.delete(message.author.id)
                             } else {
@@ -176,35 +148,26 @@ module.exports = async function (message, client, region) {
 
             if (!notFinished) return;
 
-            let updatedAkiEmbed = new Discord.MessageEmbed()
-                .setAuthor(usertag, avatar)
-                .setTitle(`Question ${aki.currentStep + 1}`)
-                .setDescription(`**Progress: ${Math.round(aki.progress)}%\n${aki.question}**`)
-                .addField("Please Type...", "**Y** or **Yes**\n**N** or **No**\n**I** or **IDK**\n**P** or **Probably**\n**PN** or **Probably Not**\n**B** or **Back**")
-                .setFooter(`You can also type "S" or "Stop" to End your Game`)
-                .setColor("RANDOM")
-            akiMessage.edit({ embed: updatedAkiEmbed })
+            message.channel.send({ content: `**Soru ${aki.currentStep + 1}**: ${aki.question}\nEvet (**y**), hayır (**n**), bilmiyorum (**i**), muhtemelen (**p**), muhtemelen değil (**pn**), geri dön (**g**), bitir (**b**)` })
 
             // all valid answers when answering a regular akinator question
             const filter = x => {
                 return (x.author.id === message.author.id && ([
-                    "y",
-                    "yes",
-                    "n",
-                    "no",
+                    "e",
+                    "evet",
+                    "h",
+                    "hayır",
                     "i",
                     "idk",
-                    "i",
-                    "dont know",
-                    "don't know",
-                    "p",
-                    "probably",
-                    "pn",
-                    "probably not",
+                    "bilmiyorum",
+                    "m",
+                    "muhtemelen",
+                    "md",
+                    "muhtemelen değil",
+                    "g",
+                    "geri",
                     "b",
-                    "back",
-                    "s",
-                    "stop"
+                    "bitir"
                 ].includes(x.content.toLowerCase())));
             }
 
@@ -216,53 +179,37 @@ module.exports = async function (message, client, region) {
                         await aki.win()
                         notFinished = false;
                         games.delete(message.author.id)
-                        return akiMessage.edit({ embed: noResEmbed })
+                        return message.channel.send({ content: ":octogonal_sign: **1 dakika** içinde herhangi bir cevap vermediğiniz için oyun iptal edildi." })
                     }
                     const answer = String(responses.first()).toLowerCase().replace("'", "");
 
                     // assign points for the possible answers given
                     const answers = {
-                        "y": 0,
-                        "yes": 0,
-                        "n": 1,
-                        "no": 1,
+                        "e": 0,
+                        "evet": 0,
+                        "h": 1,
+                        "hayır": 1,
                         "i": 2,
                         "idk": 2,
-                        "dont know": 2,
-                        "don't know": 2,
-                        "i": 2,
-                        "p": 3,
-                        "probably": 3,
-                        "pn": 4,
-                        "probably not": 4,
+                        "bilmiyorum": 2,
+                        "m": 3,
+                        "muhtemelen": 3,
+                        "md": 4,
+                        "muhtemelen değil": 4,
                     }
-
-                    let thinkingEmbed = new Discord.MessageEmbed()
-                        .setAuthor(usertag, avatar)
-                        .setTitle(`Question ${aki.currentStep + 1}`)
-                        .setDescription(`**Progress: ${Math.round(aki.progress)}%\n${aki.question}**`)
-                        .addField("Please Type...", "**Y** or **Yes**\n**N** or **No**\n**I** or **IDK**\n**P** or **Probably**\n**PN** or **Probably Not**\n**B** or **Back**")
-                        .setFooter(`Thinking...`)
-                        .setColor("RANDOM")
-                    await akiMessage.edit({ embed: thinkingEmbed })
 
                     await responses.first().delete();
 
-                    if (answer == "b" || answer == "back") {
+                    if (answer == "g" || answer == "geri") {
                         if (aki.currentStep >= 1) {
                             await aki.back();
                         }
                        
                     // stop the game if the user selected to stop
-                    } else if (answer == "s" || answer == "stop") {
+                    } else if (answer == "b" || answer == "bitir") {
                         games.delete(message.author.id)
-                        let stopEmbed = new Discord.MessageEmbed()
-                            .setAuthor(usertag, avatar)
-                            .setTitle(`Game Ended`)
-                            .setDescription(`**${message.author.username}, your game was successfully ended!**`)
-                            .setColor("RANDOM")
                         await aki.win()
-                        await akiMessage.edit({ embed: stopEmbed })
+                        await message.channel.send({ content: ":octogonal_sign: Oyun başarıyla iptal edildi." })
                         notFinished = false;
                     } else {
                         await aki.step(answers[answer]);
